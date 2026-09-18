@@ -1,50 +1,76 @@
-# Check.it — Letter-in-Shape Gesture CAPTCHA
+# Check.it — Personalized Letter-in-Shape CAPTCHA
 
-A computer-vision CAPTCHA prototype that asks users to trace letters displayed inside a randomly generated shape using their live index-finger movement.
+A computer-vision CAPTCHA prototype that asks a user to trace their personal letters inside a randomly generated shape using live index-finger movement.
 
 ## Concept
 
-Instead of a conventional text or image CAPTCHA, Check.it creates a visual challenge such as:
+The challenge combines two ideas:
 
-- Circle + two letters
-- Square + two letters
-- Triangle + two letters
-- Hexagon + two letters
-- Star + two letters
+1. **Personalization** — the user chooses two meaningful letters, such as their initials.
+2. **Dynamic CAPTCHA** — every attempt changes the enclosing shape, letter position, and letter rotation.
 
-The user uses their finger in front of a webcam to trace the displayed letters from left to right.
+Example:
+
+```text
+          ╭──────────────╮
+       ╱                    ╲
+      │         A    R        │
+       ╲                    ╱
+          ╰──────────────╯
+
+             Trace A → R
+```
+
+The letters remain personal while the visual challenge changes between attempts.
 
 ## How It Works
 
 ```text
-Random Shape + Letters
-        ↓
-Webcam
-        ↓
-MediaPipe Hand Detection
-        ↓
-Index Finger Tracking
-        ↓
-Trajectory Capture
-        ↓
-Letter Path Analysis
-        ↓
-Coverage + Path + Order Score
-        ↓
-PASS / FAIL
+User chooses personal letters
+            ↓
+      Random shape
+            ↓
+  Random letter placement
+            ↓
+       Webcam input
+            ↓
+    MediaPipe hand tracking
+            ↓
+     Index-finger path
+            ↓
+ ┌──────────┼───────────┐
+ ↓          ↓           ↓
+Path     Coverage      Order
+ ↓          ↓           ↓
+ └──────────┼───────────┘
+            ↓
+      Verification score
+            ↓
+       PASS / FAIL
 ```
+
+## Supported Shapes
+
+- Circle
+- Square
+- Triangle
+- Hexagon
+- Star
+
+Each challenge contains the user's two selected letters.
 
 ## Verification
 
-The current prototype evaluates three signals:
+The prototype currently evaluates:
 
 | Signal | Weight |
 |---|---:|
-| Path proximity to letters | 55% |
+| Path proximity to letters | 50% |
 | Letter-path coverage | 30% |
 | Letter order | 15% |
+| Overall movement | 5% |
 
-The prototype currently passes an attempt at a score of **70% or higher**. This threshold is a development setting and must be calibrated with real human and automated test data before being used for security decisions.
+The current development threshold is **70%**. This value is not a security guarantee and must be calibrated using controlled human and automated testing.
 
 ## Technology Stack
 
@@ -61,11 +87,21 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the letter-in-shape CAPTCHA:
+Run:
 
 ```bash
-python letter_shape_captcha.py
+python personal_letter_captcha.py
 ```
+
+On first launch, Check.it asks the user to choose two personal letters.
+
+Example:
+
+```text
+Enter your two letters: AR
+```
+
+The choice is stored locally in `user_profile.json`.
 
 ### Controls
 
@@ -73,62 +109,46 @@ python letter_shape_captcha.py
 - `R` — generate a new challenge
 - `Q` — quit
 
-## Example Challenge
+## Privacy
 
-A generated challenge might look like:
+The prototype does not need to save camera frames or video. It stores the selected letters locally and processes the live camera stream for fingertip tracking.
 
-```text
-        ╭────────────────╮
-       /                  \
-      /       A    R       \
-     |                      |
-      \                    /
-       \__________________/
-```
-
-The user must trace the letters with their index finger.
+This local prototype should not be treated as a production identity or biometric-storage system.
 
 ## Project Structure
 
 ```text
 Check.it/
-├── letter_shape_captcha.py       # Current CAPTCHA prototype
-├── personal_gesture_captcha.py   # Earlier personalized gesture prototype
-├── gesture_captcha.py            # Initial trajectory prototype
-├── airDraw.py                    # Original air-drawing implementation
+├── personal_letter_captcha.py   # Current personalized CAPTCHA
+├── personal_gesture_captcha.py  # Earlier gesture-template prototype
+├── letter_shape_captcha.py      # Earlier letter-in-shape prototype
+├── gesture_captcha.py           # Initial trajectory prototype
+├── airDraw.py                   # Original air-drawing implementation
 ├── requirements.txt
 └── README.md
 ```
-
-## Current Limitations
-
-This is a computer-vision research/prototype implementation.
-
-- The current application is a desktop OpenCV prototype.
-- Challenge letters are generated from an OpenCV font rather than a dedicated vector-stroke model.
-- The scoring threshold has not been statistically calibrated.
-- Replay and advanced anti-spoofing resistance require dedicated security testing.
-- A browser frontend and backend API are not yet integrated.
 
 ## Roadmap
 
 - [x] Webcam hand tracking
 - [x] Index-finger trajectory capture
-- [x] Random shapes
-- [x] Random letters
+- [x] Random shape generation
 - [x] Letter-in-shape CAPTCHA
+- [x] Personal letter selection
+- [x] Random letter placement
+- [x] Random letter rotation
 - [x] Path scoring
 - [x] Coverage scoring
 - [x] Letter-order verification
-- [ ] Improve stroke-level letter matching
-- [ ] Add rotation and difficulty levels
-- [ ] Add stronger liveness / anti-replay checks
-- [ ] Build Flask backend
-- [ ] Build browser camera interface
-- [ ] Add session-based CAPTCHA generation
-- [ ] Benchmark false-accept and false-reject rates
-- [ ] Add automated tests
+- [ ] Stroke-level letter matching
+- [ ] Multiple difficulty levels
+- [ ] Stronger liveness / anti-replay checks
+- [ ] Flask backend
+- [ ] Browser camera interface
+- [ ] Session-based CAPTCHA generation
+- [ ] Human vs automated benchmark
+- [ ] Automated tests
 
 ## Security Note
 
-Check.it is intended as a prototype for exploring gesture-based CAPTCHA verification. It should not be presented as a production security control until its detection, scoring, replay resistance, and attack resilience have been independently evaluated.
+Check.it is a computer-vision prototype for exploring gesture-based CAPTCHA verification. The current implementation has not undergone security evaluation and should not be presented as a production replacement for established CAPTCHA systems.
